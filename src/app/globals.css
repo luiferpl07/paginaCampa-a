@@ -1,0 +1,219 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #bd1541;
+  --primary-foreground: #ffffff;
+  --secondary: #2c3448;
+  --secondary-foreground: #ffffff;
+  --accent: #f6f3f1;
+  --accent-foreground: #2c3448;
+  --background: #ffffff;
+  --foreground: #2c3448;
+  --muted: #f6f6f6;
+  --muted-foreground: #65676B;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --radius: 0.5rem;
+  --header-height: 90px;
+  --header-height-scrolled: 70px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #bd1541;
+    --primary-foreground: #ffffff;
+    --secondary: #2c3448;
+    --secondary-foreground: #ffffff;
+    --accent: #f6f3f1;
+    --accent-foreground: #2c3448;
+    --background: #ffffff;
+    --foreground: #2c3448;
+    --muted: #f6f6f6;
+    --muted-foreground: #65676B;
+    --border: #e2e8f0;
+    --input: #e2e8f0;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-kurale), sans-serif;
+    
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-kurale), sans-serif;
+    font-weight: 700;
+  }
+
+  p {
+    font-family: var(--font-open-sans), sans-serif;
+  }
+}
+
+@layer components {
+  .container-custom {
+    @apply container mx-auto px-4 md:px-6 xl:max-w-7xl;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-3 font-bold uppercase;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 px-6 py-3 font-bold uppercase;
+  }
+
+  .nav-link {
+    @apply text-white hover:text-primary transition-colors;
+  }
+
+  .section-title {
+    @apply text-2xl md:text-3xl font-bold mb-6;
+  }
+
+  .section-padding {
+    @apply py-10 md:py-16;
+  }
+
+  .header-gradient {
+    background-color: #182b50;
+    background-image: linear-gradient(to right, #182b50, #253b67);
+  }
+
+  /* Estilizado del header para la animación al hacer scroll */
+  header {
+    transition: all 0.3s ease-in-out;
+  }
+
+  header.scrolled {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Ajuste para el espacio del contenido debajo del header */
+  .pt-header {
+    padding-top: var(--header-height);
+  }
+
+  @media (max-width: 768px) {
+    .pt-header {
+      padding-top: calc(var(--header-height) - 20px);
+    }
+  }
+
+  .footer-bg {
+    background-image: url('https://ext.same-assets.com/77511177/2537692775.jpeg');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+  }
+
+  .footer-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(24, 43, 80, 0.9);
+    z-index: 0;
+  }
+
+  .footer-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-section {
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    min-height: 600px;
+    display: flex;
+    align-items: center;
+  }
+
+  .hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0);
+    z-index: 1;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+  }
+
+  .feature-box {
+    @apply bg-[#182b50] text-white p-6 flex flex-col items-center text-center transition-all duration-300 hover:bg-[#bd1541];
+  }
+
+  .feature-box-icon {
+    @apply text-4xl mb-4;
+  }
+
+  .feature-box-title {
+    @apply font-bold text-lg mb-2;
+  }
+
+  .feature-box-text {
+    @apply text-sm;
+  }
+
+  .issue-card {
+    @apply border border-gray-200 overflow-hidden bg-white transition-all duration-300 hover:shadow-lg;
+  }
+
+  .issue-card-image {
+    @apply h-48 w-full object-cover;
+  }
+
+  .issue-card-content {
+    @apply p-5;
+  }
+
+  .issue-card-title {
+    @apply text-xl font-bold mb-2 text-secondary hover:text-primary transition-colors;
+  }
+
+  .issue-card-text {
+    @apply text-sm text-gray-600 mb-4;
+  }
+
+  .read-more-link {
+    @apply text-primary font-bold hover:underline inline-flex items-center;
+  }
+
+  /* Estilos para la página de Get Involved */
+  .form-control {
+    @apply mb-6;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+
+  .form-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+  }
+
+  .checkbox-group {
+    @apply space-y-2;
+  }
+
+  .checkbox-item {
+    @apply flex items-center;
+  }
+
+  .checkbox-input {
+    @apply h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary mr-2;
+  }
+}
