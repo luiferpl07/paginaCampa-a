@@ -60,8 +60,6 @@ module.exports = {
         'lato': ['var(--font-lato)'],
         'open-sans': ['var(--font-open-sans)'],
         'inter': ['var(--font-inter)'],
-        'kurale': ['var(--font-kurale)'],
-        'zain': ['var(--font-zain)'],
       },
       backgroundImage: {
         'hero-pattern': "url('https://ext.same-assets.com/77511177/3449046539.png')",

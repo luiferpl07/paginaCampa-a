@@ -8,6 +8,7 @@ import SeccionPropuestas from "@/components/home/SeccionPropuestas";
 import SeccionNoticias from "@/components/home/SeccionNoticias";
 import SeccionPerfil from "@/components/home/SeccionPerfil";
 import RedesSociales from "@/components/RedesSociales";
+import SeccionRelatos from "@/components/home/SeccionRelatos";
 
 // Carga dinámica de framer-motion solo en el cliente
 const MotionDiv = dynamic(() =>
@@ -44,6 +45,7 @@ export default function Home() {
           <SeccionParticipacion />
           <SeccionPropuestas />
           <SeccionNoticias />
+          <SeccionRelatos />
           <SeccionPerfil />
         </div>
       </Layout>
@@ -103,6 +105,8 @@ export default function Home() {
         >
           <SeccionNoticias />
         </MotionDiv>
+
+        <SeccionRelatos />
 
         <MotionDiv
           initial="hidden"

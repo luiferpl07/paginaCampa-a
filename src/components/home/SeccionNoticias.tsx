@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { ArrowRight, Instagram } from 'lucide-react';
 
 
-const SeccionNoticias = () => {
+const SecciónNoticias = () => {
   return (
     <section className="section-padding bg-white">
       <div className="container-custom">
@@ -75,37 +75,37 @@ const SeccionNoticias = () => {
           </div>
 
           {/* Upcoming Events */}
-          <div className="md:col-span-1 bg-primary text-white">
+          <div className="md:col-span-1 bg-[--red] text-primary">
             <div className="p-6">
               <h4 className="text-lg font-bold mb-6">PRÓXIMOS EVENTOS</h4>
 
               <div className="mb-6">
                 <div className="flex items-start mb-2">
-                  <div className="bg-white text-primary p-2 mr-4 text-center min-w-12">
+                  <div className="bg-primary text-[red] p-2 mr-4 text-center min-w-12">
                     <div className="text-xl font-bold">29</div>
                     <div className="text-sm">Apr</div>
                   </div>
                   <div>
                     <h5 className="font-bold">Teatro Municipal</h5>
-                    <p className="text-xs text-gray-200">Sincelejo, SUCRE • 10:00 - 17:00</p>
+                    <p className="text-xs text-primary">Sincelejo, SUCRE • 10:00 - 17:00</p>
                   </div>
                 </div>
               </div>
 
               <div className="mb-6">
                 <div className="flex items-start mb-2">
-                  <div className="bg-white text-primary p-2 mr-4 text-center min-w-12">
+                  <div className="bg-primary text-[red] p-2 mr-4 text-center min-w-12">
                     <div className="text-xl font-bold">21</div>
                     <div className="text-sm">May</div>
                   </div>
                   <div>
                     <h5 className="font-bold">Plaza Majagual</h5>
-                    <p className="text-xs text-gray-200">Sincelejo, SUCRE • 11:00 - 13:00</p>
+                    <p className="text-xs text-primary">Sincelejo, SUCRE • 11:00 - 13:00</p>
                   </div>
                 </div>
               </div>
 
-              <Link href="/events" className="text-white underline mt-4 inline-flex items-center">
+              <Link href="/events" className="text-primary underline mt-4 inline-flex items-center">
                 Más Eventos <ArrowRight className="h-4 w-4 ml-1" />
               </Link>
             </div>
@@ -116,4 +116,4 @@ const SeccionNoticias = () => {
   );
 };
 
-export default SeccionNoticias;
+export default SecciónNoticias;

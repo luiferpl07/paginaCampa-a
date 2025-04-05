@@ -18,7 +18,7 @@ const SeccionPrincipal = () => {
       <div className="hero-overlay bg-black/40 absolute inset-0" />
       <div className="container-custom text-white text-center md:text-left relative z-10 h-full flex items-center">
         <div className="max-w-lg"> {/* Removed pt-24 */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">
             Por un pais mejor <br />
             <span className="text-white">Arriba Colombia!</span>
           </h1>

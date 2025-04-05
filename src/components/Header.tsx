@@ -97,7 +97,7 @@ const Header = () => {
     <header
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
         !isHomePage || scrolled 
-          ? 'bg-[#182b50] py-2 shadow-md' 
+          ? 'bg-[--red] py-2 shadow-md' 
           : 'bg-transparent py-4'  
       }`}
     >
@@ -107,7 +107,7 @@ const Header = () => {
           <Link href="/" className="relative z-10">
             <div className="flex items-center">
               <Image
-                src="/logo.png"
+                src="/logo.svg"
                 alt="Logo"
                 width={150}
                 height={60}

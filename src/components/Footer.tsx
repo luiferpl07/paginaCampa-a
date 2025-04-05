@@ -57,7 +57,7 @@ const Footer = () => {
               <div>
                 <Link href="/" className="inline-block mb-4">
                   <Image
-                    src=""
+                    src="/logo.svg"
                     alt="Hector Olimpo"
                     width={180}
                     height={60}
@@ -79,7 +79,7 @@ const Footer = () => {
 
               {/* Quick Links */}
               <div>
-                <h4 className="text-lg font-bold mb-4 uppercase">Enlaces rápidos</h4>
+                <h4 className="text-lg  mb-4 uppercase">Enlaces rápidos</h4>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <ul className="space-y-2">
