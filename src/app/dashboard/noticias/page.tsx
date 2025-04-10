@@ -1,390 +1,467 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { DataTable } from "@/components/data-table/data-table";
+import { ColumnDef } from "@tanstack/react-table";
+import { generateColumns, formatDate } from "@/components/data-table/columns";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormModal } from "@/components/modals/form-modal";
+import { ConfirmModal } from "@/components/modals/confirm-modal";
+import apiClient, { uploadFile } from "@/lib/api-client";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Calendar,
-} from "lucide-react";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Image } from "lucide-react";
 
-// Definición del tipo Noticia
+// Define the Noticia interface
 interface Noticia {
-  id: string;
+  id: number;
   titulo: string;
   resumen: string;
   contenido: string;
-  imagen: string;
+  imagenUrl: string | null;
   fecha: string;
-  destacada: boolean;
 }
 
-// Componente para crear/editar noticias
-const NoticiaForm = ({
-  noticia,
-  onSave,
-  onCancel
-}: {
-  noticia?: Noticia,
-  onSave: (data: Noticia) => void,
-  onCancel: () => void
-}) => {
-  const [form, setForm] = useState<Noticia>({
-    id: noticia?.id || "",
-    titulo: noticia?.titulo || "",
-    resumen: noticia?.resumen || "",
-    contenido: noticia?.contenido || "",
-    imagen: noticia?.imagen || "",
-    fecha: noticia?.fecha || new Date().toISOString().split('T')[0],
-    destacada: noticia?.destacada || false,
+// Define the form schema with Zod
+const formSchema = z.object({
+  titulo: z.string().min(2, "El título debe tener al menos 2 caracteres"),
+  resumen: z.string().min(10, "El resumen debe tener al menos 10 caracteres"),
+  contenido: z.string().min(20, "El contenido debe tener al menos 20 caracteres"),
+  imagenUrl: z.string().nullable().optional(),
+  fecha: z.string(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+export default function NoticiasPage() {
+  const { toast } = useToast();
+  const [noticias, setNoticias] = useState<Noticia[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [selectedNoticia, setSelectedNoticia] = useState<Noticia | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      titulo: "",
+      resumen: "",
+      contenido: "",
+      imagenUrl: "",
+      fecha: new Date().toISOString().split("T")[0],
+    },
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+  // Fetch noticias on component mount
+  useEffect(() => {
+    const fetchNoticias = async () => {
+      try {
+        const response = await apiClient.get<Noticia[]>('/noticias');
+        if (response.data) {
+          setNoticias(response.data);
+        } else {
+          toast({
+            title: "Error",
+            description: response.error || "No se pudieron cargar las noticias",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Error al cargar las noticias",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNoticias();
+  }, [toast]);
+
+  // Open form modal for creating a new noticia
+  const handleCreateNew = () => {
+    setSelectedNoticia(null);
+    form.reset({
+      titulo: "",
+      resumen: "",
+      contenido: "",
+      imagenUrl: "",
+      fecha: new Date().toISOString().split("T")[0],
+    });
+    setIsFormModalOpen(true);
   };
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    setForm(prev => ({ ...prev, [name]: checked }));
+  // Open form modal for editing a noticia
+  const handleEdit = (noticia: Noticia) => {
+    setSelectedNoticia(noticia);
+    form.reset({
+      titulo: noticia.titulo,
+      resumen: noticia.resumen,
+      contenido: noticia.contenido,
+      imagenUrl: noticia.imagenUrl || "",
+      fecha: new Date(noticia.fecha).toISOString().split("T")[0],
+    });
+    setIsFormModalOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Validaciones básicas
-    if (!form.titulo.trim()) {
-      toast.error("El título es obligatorio");
-      return;
-    }
-
-    if (!form.resumen.trim()) {
-      toast.error("El resumen es obligatorio");
-      return;
-    }
-
-    if (!form.contenido.trim()) {
-      toast.error("El contenido es obligatorio");
-      return;
-    }
-
-    if (!form.imagen.trim()) {
-      toast.error("La URL de la imagen es obligatoria");
-      return;
-    }
-
-    // Si no hay ID, generarlo (en un sistema real esto lo haría el backend)
-    if (!form.id) {
-      form.id = form.titulo.toLowerCase().replace(/\s+/g, '-');
-    }
-
-    onSave(form);
+  // Open confirm modal for deleting a noticia
+  const handleDelete = (noticia: Noticia) => {
+    setSelectedNoticia(noticia);
+    setIsDeleteModalOpen(true);
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="titulo">Título</Label>
-        <Input
-          id="titulo"
-          name="titulo"
-          value={form.titulo}
-          onChange={handleChange}
-          placeholder="Título de la noticia"
-        />
-      </div>
+  // Handle image upload
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+  
+    setUploadingImage(true);
+    try {
+      // Usamos el nuevo método uploadFile que solo requiere el archivo
+      const response = await uploadFile(file);
+      
+      if (response.data?.url) {
+        // Ahora obtenemos la URL de la respuesta en response.data.url
+        form.setValue('imagenUrl', response.data.url);
+        toast({
+          title: "Éxito",
+          description: "Imagen subida correctamente",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.error || "No se pudo subir la imagen",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Error al subir la imagen",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+  // Handle form submission for creating or updating a noticia
+  const onSubmit = async (data: FormValues) => {
+    setIsSubmitting(true);
+    try {
+      if (selectedNoticia) {
+        // Update existing noticia
+        const response = await apiClient.put<Noticia>(
+          `/noticias/${selectedNoticia.id}`,
+          data
+        );
+        if (response.data) {
+          toast({
+            title: "Éxito",
+            description: "Noticia actualizada correctamente",
+          });
+          setNoticias(
+            noticias.map((n) =>
+              n.id === selectedNoticia.id ? response.data! : n
+            )
+          );
+        } else {
+          toast({
+            title: "Error",
+            description: response.error || "No se pudo actualizar la noticia",
+            variant: "destructive",
+          });
+        }
+      } else {
+        // Create new noticia
+        const response = await apiClient.post<Noticia>('/noticias', data);
+        if (response.data) {
+          toast({
+            title: "Éxito",
+            description: "Noticia creada correctamente",
+          });
+          setNoticias([...noticias, response.data]);
+        } else {
+          toast({
+            title: "Error",
+            description: response.error || "No se pudo crear la noticia",
+            variant: "destructive",
+          });
+        }
+      }
+      setIsFormModalOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Error al guardar la noticia",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-      <div className="space-y-2">
-        <Label htmlFor="resumen">Resumen</Label>
-        <Textarea
-          id="resumen"
-          name="resumen"
-          value={form.resumen}
-          onChange={handleChange}
-          placeholder="Breve resumen de la noticia..."
-          rows={2}
-        />
-      </div>
+  // Handle noticia deletion
+  const confirmDelete = async () => {
+    if (!selectedNoticia) return;
 
-      <div className="space-y-2">
-        <Label htmlFor="contenido">Contenido</Label>
-        <Textarea
-          id="contenido"
-          name="contenido"
-          value={form.contenido}
-          onChange={handleChange}
-          placeholder="Contenido completo de la noticia..."
-          rows={5}
-        />
-      </div>
+    setDeleteLoading(true);
+    try {
+      const response = await apiClient.delete(`/noticias/${selectedNoticia.id}`);
+      if (!response.error) {
+        toast({
+          title: "Éxito",
+          description: "Noticia eliminada correctamente",
+        });
+        setNoticias(noticias.filter(n => n.id !== selectedNoticia.id));
+        setIsDeleteModalOpen(false);
+      } else {
+        toast({
+          title: "Error",
+          description: response.error || "No se pudo eliminar la noticia",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Error al eliminar la noticia",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
-      <div className="space-y-2">
-        <Label htmlFor="imagen">URL de la imagen</Label>
-        <Input
-          id="imagen"
-          name="imagen"
-          value={form.imagen}
-          onChange={handleChange}
-          placeholder="https://ejemplo.com/imagen.jpg"
-        />
-      </div>
+  // Define table columns
+  const columns: ColumnDef<Noticia>[] = [
+    {
+      accessorKey: "titulo",
+      header: "Título",
+    },
+    {
+      accessorKey: "resumen",
+      header: "Resumen",
+      cell: ({ row }) => {
+        const resumen = row.original.resumen;
+        return resumen.length > 50
+          ? `${resumen.substring(0, 50)}...`
+          : resumen;
+      },
+    },
+    {
+      accessorKey: "fecha",
+      header: "Fecha",
+      cell: ({ row }) => formatDate(row.original.fecha),
+    },
+    {
+      accessorKey: "imagenUrl",
+      header: "Imagen",
+      cell: ({ row }) => {
+        const imagenUrl = row.original.imagenUrl;
+        return (
+          <div className="relative h-10 w-20">
+            {imagenUrl ? (
+              <img
+                src={imagenUrl}
+                alt={row.original.titulo}
+                className="h-full w-full object-cover rounded"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full w-full bg-gray-100 rounded">
+                <Image className="h-5 w-5 text-gray-400" />
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+  ];
 
-      <div className="space-y-2">
-        <Label htmlFor="fecha">Fecha de publicación</Label>
-        <Input
-          id="fecha"
-          name="fecha"
-          type="date"
-          value={form.fecha}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div className="flex items-center space-x-2">
-        <input
-          type="checkbox"
-          id="destacada"
-          name="destacada"
-          checked={form.destacada}
-          onChange={handleCheckboxChange}
-          className="rounded border-gray-300 text-primary focus:ring-primary"
-        />
-        <Label htmlFor="destacada">Noticia destacada</Label>
-      </div>
-
-      <DialogFooter className="mt-6">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
-        </Button>
-        <Button type="submit">
-          {noticia ? "Actualizar" : "Crear"} Noticia
-        </Button>
-      </DialogFooter>
-    </form>
+  // Add action buttons to columns
+  const columnsWithActions = generateColumns<Noticia>(
+    columns,
+    handleEdit,
+    handleDelete
   );
-};
 
-// Componente de confirmación para eliminar
-const DeleteConfirmation = ({
-  noticia,
-  onConfirm,
-  onCancel
-}: {
-  noticia: Noticia,
-  onConfirm: () => void,
-  onCancel: () => void
-}) => {
-  return (
-    <div className="space-y-4">
-      <p className="text-sm text-gray-500">
-        ¿Estás seguro de que deseas eliminar la noticia <strong>{noticia.titulo}</strong>? Esta acción no se puede deshacer.
-      </p>
-
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
-        </Button>
-        <Button type="button" variant="destructive" onClick={onConfirm}>
-          Eliminar
-        </Button>
-      </DialogFooter>
-    </div>
-  );
-};
-
-// Datos de muestra (en un sistema real estos vendrían de una API)
-const noticiasIniciales: Noticia[] = [
-  {
-    id: 'avance-en-infraestructura',
-    titulo: 'Avance en infraestructura',
-    resumen: 'Se anuncia un nuevo plan de inversión en infraestructura para la región.',
-    contenido: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin sodales eget ipsum eu aliquam. Integer malesuada diam et arcu condimentum, at vestibulum felis tincidunt. Sed auctor lectus id arcu ultricies, eget efficitur velit tincidunt. Etiam quis auctor arcu.',
-    imagen: 'https://ext.same-assets.com/77511177/1863026383.jpeg',
-    fecha: '2023-12-10',
-    destacada: true,
-  },
-  {
-    id: 'reunion-con-lideres-comunitarios',
-    titulo: 'Reunión con líderes comunitarios',
-    resumen: 'Héctor Olimpo se reunió con líderes comunitarios para escuchar sus propuestas.',
-    contenido: 'Praesent sapien massa, convallis a pellentesque nec, egestas non nisi. Donec rutrum congue leo eget malesuada. Curabitur non nulla sit amet nisl tempus convallis quis ac lectus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin sodales eget ipsum eu aliquam.',
-    imagen: 'https://ext.same-assets.com/77511177/2240474230.jpeg',
-    fecha: '2023-11-25',
-    destacada: false,
-  },
-  {
-    id: 'propuesta-para-el-sector-educativo',
-    titulo: 'Propuesta para el sector educativo',
-    resumen: 'Nuevas propuestas para mejorar la calidad educativa en la región.',
-    contenido: 'Curabitur arcu erat, accumsan id imperdiet et, porttitor at sem. Curabitur aliquet quam id dui posuere blandit. Quisque velit nisi, pretium ut lacinia in, elementum id enim. Sed porttitor lectus nibh. Sed porttitor lectus nibh.',
-    imagen: 'https://ext.same-assets.com/77511177/616072021.jpeg',
-    fecha: '2023-11-15',
-    destacada: false,
-  },
-];
-
-// Página principal de noticias
-export default function NoticiasPage() {
-  const [noticias, setNoticias] = useState<Noticia[]>(noticiasIniciales);
-  const [dialogType, setDialogType] = useState<'create' | 'edit' | 'delete' | null>(null);
-  const [selectedNoticia, setSelectedNoticia] = useState<Noticia | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  // Función para abrir el diálogo
-  const openDialog = (type: 'create' | 'edit' | 'delete', noticia?: Noticia) => {
-    setDialogType(type);
-    setSelectedNoticia(noticia || null);
-    setDialogOpen(true);
-  };
-
-  // Función para guardar una noticia (nueva o editada)
-  const handleSaveNoticia = (data: Noticia) => {
-    if (dialogType === 'create') {
-      // Añadir nueva noticia
-      setNoticias([data, ...noticias]);
-      toast.success('Noticia creada correctamente');
-    } else if (dialogType === 'edit') {
-      // Actualizar noticia existente
-      setNoticias(noticias.map(n => n.id === data.id ? data : n));
-      toast.success('Noticia actualizada correctamente');
-    }
-
-    setDialogOpen(false);
-  };
-
-  // Función para eliminar una noticia
-  const handleDeleteNoticia = () => {
-    if (selectedNoticia) {
-      setNoticias(noticias.filter(n => n.id !== selectedNoticia.id));
-      toast.success('Noticia eliminada correctamente');
-      setDialogOpen(false);
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Noticias</h1>
-          <p className="text-muted-foreground">
-            Gestiona las noticias y actualizaciones de la campaña.
-          </p>
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-zinc-300 border-t-zinc-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-zinc-600">Cargando noticias...</p>
         </div>
+      </div>
+    );
+  }
 
-        <Button onClick={() => openDialog('create')}>
-          <Plus className="h-4 w-4 mr-2" />
-          Añadir Noticia
-        </Button>
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Noticias</h1>
+        <p className="text-muted-foreground">
+          Gestiona las noticias y actualizaciones de la campaña.
+        </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Todas las noticias</CardTitle>
-          <CardDescription>
-            Se muestran todas las noticias y actualizaciones de la campaña.
-          </CardDescription>
+          <CardTitle>Lista de Noticias</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Título</TableHead>
-                <TableHead>Resumen</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Destacada</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {noticias.map((noticia) => (
-                <TableRow key={noticia.id}>
-                  <TableCell className="font-medium">{noticia.titulo}</TableCell>
-                  <TableCell className="max-w-xs truncate">{noticia.resumen}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                      {new Date(noticia.fecha).toLocaleDateString()}
-                    </div>
-                  </TableCell>
-                  <TableCell>{noticia.destacada ? "Sí" : "No"}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => openDialog('edit', noticia)}>
-                        <Pencil className="h-4 w-4" />
-                        <span className="sr-only">Editar</span>
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => openDialog('delete', noticia)}>
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Eliminar</span>
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable
+            columns={columnsWithActions}
+            data={noticias}
+            searchKey="titulo"
+            searchPlaceholder="Buscar por título..."
+            onCreateNew={handleCreateNew}
+          />
         </CardContent>
       </Card>
 
-      {/* Diálogo para crear/editar/eliminar */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[550px]">
-          <DialogHeader>
-            <DialogTitle>
-              {dialogType === 'create' && 'Crear nueva noticia'}
-              {dialogType === 'edit' && 'Editar noticia'}
-              {dialogType === 'delete' && 'Eliminar noticia'}
-            </DialogTitle>
-            <DialogDescription>
-              {dialogType !== 'delete'
-                ? 'Rellena los campos para gestionar la noticia.'
-                : 'Esta acción no se puede deshacer.'}
-            </DialogDescription>
-          </DialogHeader>
+      {/* Form Modal */}
+      <FormModal
+        title={selectedNoticia ? "Editar Noticia" : "Crear Nueva Noticia"}
+        description="Complete la información de la noticia."
+        isOpen={isFormModalOpen}
+        onClose={() => setIsFormModalOpen(false)}
+        onSubmit={form.handleSubmit(onSubmit)}
+        isSubmitting={isSubmitting}
+      >
+        <Form {...form}>
+          <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="titulo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Título</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ingrese el título de la noticia" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="resumen"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Resumen</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Ingrese un breve resumen de la noticia"
+                      rows={2}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="contenido"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contenido</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Ingrese el contenido completo de la noticia"
+                      rows={6}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="fecha"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fecha</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="imagenUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Imagen</FormLabel>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        {...field}
+                        value={field.value || ""}
+                        placeholder="URL de la imagen"
+                        readOnly
+                      />
+                      <div className="relative">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                          disabled={uploadingImage}
+                        />
+                        <Button type="button" disabled={uploadingImage}>
+                          {uploadingImage ? "Subiendo..." : "Subir"}
+                        </Button>
+                      </div>
+                    </div>
+                    {field.value && (
+                      <div className="relative h-32 w-full">
+                        <img
+                          src={field.value}
+                          alt="Vista previa"
+                          className="h-full w-auto object-contain rounded"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </Form>
+      </FormModal>
 
-          {dialogType === 'delete' && selectedNoticia ? (
-            <DeleteConfirmation
-              noticia={selectedNoticia}
-              onConfirm={handleDeleteNoticia}
-              onCancel={() => setDialogOpen(false)}
-            />
-          ) : (
-            <NoticiaForm
-              noticia={dialogType === 'edit' ? selectedNoticia || undefined : undefined}
-              onSave={handleSaveNoticia}
-              onCancel={() => setDialogOpen(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        loading={deleteLoading}
+        title="Confirmar eliminación"
+        description={`¿Está seguro que desea eliminar la noticia "${selectedNoticia?.titulo}"? Esta acción no se puede deshacer.`}
+      />
     </div>
   );
 }

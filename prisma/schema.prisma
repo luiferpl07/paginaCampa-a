@@ -1,0 +1,176 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  nombre      String?
+  email     String   @unique
+  contraseña  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Relato {
+  id         Int     @id @default(autoincrement())
+  nombre     String
+  ocupacion  String
+  testimonio String
+  imagenUrl  String?
+}
+
+
+model Propuesta {
+  id          Int     @id @default(autoincrement())
+  titulo      String
+  descripcion String
+  iconoNombre String
+}
+
+model Perfil {
+  id          Int     @id @default(autoincrement())
+  titulo      String
+  subtitulo   String
+  descripcion String
+  fechaInicio DateTime
+  fechaFin    DateTime
+}
+
+model Participacion {
+  id          Int     @id @default(autoincrement())
+  titulo      String
+  descripcion String
+  iconoNombre String
+}
+
+model BannerPrincipal {
+  id           Int     @id @default(autoincrement())
+  titulo       String
+  subtitulo    String
+  imagenUrl    String
+  
+}
+
+model Evento {
+  id          Int      @id @default(autoincrement())
+  titulo      String
+  fecha       DateTime
+  ubicacion   String
+  horaInicio  String?
+  horaFin     String?
+  createdAt   DateTime @default(now())
+}
+
+model SeccionBiografia {
+  id        Int           @id @default(autoincrement())
+  titulo    String        // Ej: "Infancia", "Vida política", etc.
+  descripcion String?     // Texto introductorio de la sección
+  historias HistoriaBio[] // Relación con historias dentro de esta sección
+  orden     Int           // Para ordenarlas
+}
+
+model HistoriaBio {
+  id             Int      @id @default(autoincrement())
+  titulo         String
+  contenido      String   // Texto de la historia
+  imagenUrl      String?  // Imagen opcional
+  fecha          DateTime? 
+  orden          Int
+  seccionId      Int
+  seccion        SeccionBiografia @relation(fields: [seccionId], references: [id])
+}
+
+model TrayectoriaPolitica {
+  id           Int      @id @default(autoincrement())
+  cargo        String   // Ej: "Concejal de Sincelejo", "Gobernador de Sucre"
+  institucion  String   // Ej: "Alcaldía de Sincelejo"
+  descripcion  String   // Texto explicando qué hizo, logros, contexto
+  fechaInicio  DateTime
+  fechaFin     DateTime?
+  imagenUrl    String?  // Imagen opcional para acompañar
+  orden        Int      // Por si quieres controlar el orden manualmente
+}
+
+model Noticia {
+  id        Int      @id @default(autoincrement())
+  titulo    String
+  resumen   String
+  contenido String
+  imagenUrl String?
+  fecha     DateTime
+}
+
+model Podcast {
+  id        Int      @id @default(autoincrement())
+  titulo    String
+  spotifyUrl String  // enlace a Spotify
+  fecha     DateTime
+}
+
+model Video {
+  id         Int      @id @default(autoincrement())
+  titulo     String
+  youtubeUrl String
+  thumbnail  String?
+  fecha      DateTime
+}
+
+model BlogPost {
+  id        Int      @id @default(autoincrement())
+  titulo    String
+  contenido String
+  autor     String
+  imagenUrl String?
+  fecha     DateTime
+}
+model ELibro {
+  id          Int      @id @default(autoincrement())
+  titulo      String
+  descripcion String
+  autor       String
+  portadaUrl  String?
+  archivoUrl  String
+  fecha       DateTime
+}
+
+model Revista {
+  id          Int      @id @default(autoincrement())
+  titulo      String
+  edicion     String
+  portadaUrl  String?
+  archivoUrl  String
+  fecha       DateTime
+}
+
+model DocumentoPDF {
+  id          Int      @id @default(autoincrement())
+  titulo      String
+  descripcion String?
+  archivoUrl  String
+  fecha       DateTime
+}
+
+
+model MiembroCampaña {
+  id           Int      @id @default(autoincrement())
+  nombre       String
+  cargo        String      // Ej: "Jefe de Prensa", "Coordinador de Voluntarios"
+  area         String?     // Ej: "Comunicación", "Organización Territorial"
+  fotoUrl      String?     // Imagen de perfil opcional
+
+  facebook     String?
+  instagram    String?
+  x            String?
+  tiktok       String?
+  youtube      String?
+  whatsapp     String?
+
+  orden        Int?        // Para controlar el orden de aparición en frontend
+  creadoEn     DateTime    @default(now())
+}

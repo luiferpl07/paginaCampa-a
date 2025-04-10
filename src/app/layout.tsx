@@ -1,19 +1,22 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Inter, Lato, Open_Sans, Kurale } from "next/font/google";
 
 import "./globals.css";
+import Header from "@/components/Header";
 
-// Tipografía Poppins con los pesos que necesitas
-const poppins = Poppins({
-  weight: ["400", "500", "800", "900"], // Regular, Medium, Extrabold, Black
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const lato = Lato({ weight: ["400", "700", "900"], subsets: ["latin"], variable: "--font-lato", display: "swap" });
+const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-open-sans", display: "swap" });
+const kurale = Kurale({ 
+  weight: ["400"], // Kurale solo viene en peso 400
   subsets: ["latin"],
-  variable: "--font-poppins",
-  display: "swap",
+  variable: "--font-kurale", 
+  display: "swap" 
 });
 
 export const metadata: Metadata = {
-  title: "Héctor Olimpo",
-  description: "Campaña política, partido, organización sin fines de lucro",
+  title: "Hector Olimpo",
+  description: "Campaña política, partido, organización sin fines de lucro ",
 };
 
 export default function RootLayout({
@@ -23,8 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={`${poppins.variable} font-poppins`}>
-        {children}
+
+      <body className={`${inter.variable} ${lato.variable} ${openSans.variable} font-open-sans  ${kurale.variable}`}>
+        {children }
       </body>
     </html>
   );

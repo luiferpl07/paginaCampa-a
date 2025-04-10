@@ -1,448 +1,161 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Calendar,
-  Clock,
-  MapPin
-} from "lucide-react";
+import { DataTable } from "@/components/ui/data-table";
+import { ColumnDef } from "@tanstack/react-table";
+import { Edit, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { formatDate } from "@/lib/utils";
 
-// Definición del tipo Evento
 interface Evento {
-  id: string;
+  id: number;
   titulo: string;
-  descripcion: string;
-  ubicacion: string;
-  direccion: string;
   fecha: string;
-  horaInicio: string;
-  horaFin: string;
-  destacado: boolean;
+  ubicacion: string;
+  horaInicio: string | null;
+  horaFin: string | null;
+  createdAt: string;
 }
 
-// Componente para crear/editar eventos
-const EventoForm = ({
-  evento,
-  onSave,
-  onCancel
-}: {
-  evento?: Evento,
-  onSave: (data: Evento) => void,
-  onCancel: () => void
-}) => {
-  const [form, setForm] = useState<Evento>({
-    id: evento?.id || "",
-    titulo: evento?.titulo || "",
-    descripcion: evento?.descripcion || "",
-    ubicacion: evento?.ubicacion || "",
-    direccion: evento?.direccion || "",
-    fecha: evento?.fecha || new Date().toISOString().split('T')[0],
-    horaInicio: evento?.horaInicio || "10:00",
-    horaFin: evento?.horaFin || "12:00",
-    destacado: evento?.destacado || false,
-  });
+export default function EventosPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+  // Aquí normalmente se cargarían los datos desde tu API en Express
+  // Para este ejemplo, simularemos algunos datos
+  useEffect(() => {
+    // Simulación de carga de datos
+    const demoEventos = [
+      {
+        id: 1,
+        titulo: "Evento de Lanzamiento",
+        fecha: new Date().toISOString(),
+        ubicacion: "Centro de Convenciones",
+        horaInicio: "10:00",
+        horaFin: "12:00",
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 2,
+        titulo: "Reunión Comunitaria",
+        fecha: new Date(Date.now() + 86400000).toISOString(), // mañana
+        ubicacion: "Plaza Principal",
+        horaInicio: "16:00",
+        horaFin: "18:00",
+        createdAt: new Date().toISOString()
+      }
+    ];
+
+    setEventos(demoEventos);
+    setLoading(false);
+  }, []);
+
+  const handleDelete = async (id: number) => {
+    // Esta función se conectaría a tu API en Express
+    try {
+      // Simular eliminación exitosa
+      setEventos(eventos.filter(evento => evento.id !== id));
+      toast.success("Evento eliminado correctamente");
+    } catch (error) {
+      console.error("Error deleting evento:", error);
+      toast.error("Error al eliminar el evento");
+    }
   };
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    setForm(prev => ({ ...prev, [name]: checked }));
-  };
+  const columns: ColumnDef<Evento>[] = [
+    {
+      accessorKey: "id",
+      header: "ID",
+    },
+    {
+      accessorKey: "titulo",
+      header: "Título",
+    },
+    {
+      accessorKey: "fecha",
+      header: "Fecha",
+      cell: ({ row }) => formatDate(row.original.fecha)
+    },
+    {
+      accessorKey: "ubicacion",
+      header: "Ubicación",
+    },
+    {
+      accessorKey: "horaInicio",
+      header: "Hora Inicio",
+      cell: ({ row }) => row.original.horaInicio || "N/A"
+    },
+    {
+      accessorKey: "horaFin",
+      header: "Hora Fin",
+      cell: ({ row }) => row.original.horaFin || "N/A"
+    },
+    {
+      id: "actions",
+      header: "Acciones",
+      cell: ({ row }) => {
+        const evento = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <Link href={`/dashboard/eventos/${evento.id}/edit`}>
+              <Button variant="outline" size="icon" className="h-8 w-8">
+                <Edit className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => {
+                setSelectedEvento(evento);
+                setDeleteDialogOpen(true);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Validaciones básicas
-    if (!form.titulo.trim()) {
-      toast.error("El título es obligatorio");
-      return;
-    }
-
-    if (!form.ubicacion.trim()) {
-      toast.error("La ubicación es obligatoria");
-      return;
-    }
-
-    if (!form.fecha) {
-      toast.error("La fecha es obligatoria");
-      return;
-    }
-
-    if (!form.horaInicio || !form.horaFin) {
-      toast.error("El horario es obligatorio");
-      return;
-    }
-
-    // Si no hay ID, generarlo (en un sistema real esto lo haría el backend)
-    if (!form.id) {
-      form.id = form.titulo.toLowerCase().replace(/\s+/g, '-');
-    }
-
-    onSave(form);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="titulo">Título del evento</Label>
-        <Input
-          id="titulo"
-          name="titulo"
-          value={form.titulo}
-          onChange={handleChange}
-          placeholder="Ej: Encuentro comunitario"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="descripcion">Descripción</Label>
-        <Textarea
-          id="descripcion"
-          name="descripcion"
-          value={form.descripcion}
-          onChange={handleChange}
-          placeholder="Breve descripción del evento..."
-          rows={3}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="ubicacion">Ubicación</Label>
-          <Input
-            id="ubicacion"
-            name="ubicacion"
-            value={form.ubicacion}
-            onChange={handleChange}
-            placeholder="Ej: Teatro Municipal"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="direccion">Dirección</Label>
-          <Input
-            id="direccion"
-            name="direccion"
-            value={form.direccion}
-            onChange={handleChange}
-            placeholder="Ej: Calle Principal #123"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="fecha">Fecha</Label>
-          <Input
-            id="fecha"
-            name="fecha"
-            type="date"
-            value={form.fecha}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="horaInicio">Hora de inicio</Label>
-          <Input
-            id="horaInicio"
-            name="horaInicio"
-            type="time"
-            value={form.horaInicio}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="horaFin">Hora de finalización</Label>
-          <Input
-            id="horaFin"
-            name="horaFin"
-            type="time"
-            value={form.horaFin}
-            onChange={handleChange}
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center space-x-2">
-        <input
-          type="checkbox"
-          id="destacado"
-          name="destacado"
-          checked={form.destacado}
-          onChange={handleCheckboxChange}
-          className="rounded border-gray-300 text-primary focus:ring-primary"
-        />
-        <Label htmlFor="destacado">Evento destacado</Label>
-      </div>
-
-      <DialogFooter className="mt-6">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
-        </Button>
-        <Button type="submit">
-          {evento ? "Actualizar" : "Crear"} Evento
-        </Button>
-      </DialogFooter>
-    </form>
-  );
-};
-
-// Componente de confirmación para eliminar
-const DeleteConfirmation = ({
-  evento,
-  onConfirm,
-  onCancel
-}: {
-  evento: Evento,
-  onConfirm: () => void,
-  onCancel: () => void
-}) => {
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-500">
-        ¿Estás seguro de que deseas eliminar el evento <strong>{evento.titulo}</strong>? Esta acción no se puede deshacer.
-      </p>
-
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
-        </Button>
-        <Button type="button" variant="destructive" onClick={onConfirm}>
-          Eliminar
-        </Button>
-      </DialogFooter>
-    </div>
-  );
-};
-
-// Datos de muestra (en un sistema real estos vendrían de una API)
-const eventosIniciales: Evento[] = [
-  {
-    id: 'teatro-municipal',
-    titulo: 'Teatro Municipal',
-    descripcion: 'Encuentro con la comunidad para discutir propuestas de la campaña.',
-    ubicacion: 'Teatro Municipal',
-    direccion: 'Calle Principal #123, Sincelejo, SUCRE',
-    fecha: '2023-04-29',
-    horaInicio: '10:00',
-    horaFin: '17:00',
-    destacado: true,
-  },
-  {
-    id: 'plaza-majagual',
-    titulo: 'Plaza Majagual',
-    descripcion: 'Presentación del plan de gobierno con énfasis en propuestas para el sector agrícola.',
-    ubicacion: 'Plaza Majagual',
-    direccion: 'Plaza Principal, Sincelejo, SUCRE',
-    fecha: '2023-05-21',
-    horaInicio: '11:00',
-    horaFin: '13:00',
-    destacado: false,
-  },
-  {
-    id: 'centro-comunitario-las-flores',
-    titulo: 'Centro Comunitario Las Flores',
-    descripcion: 'Diálogo ciudadano sobre seguridad comunitaria.',
-    ubicacion: 'Centro Comunitario Las Flores',
-    direccion: 'Barrio Las Flores, Calle 45 #23-12, Sincelejo',
-    fecha: '2023-06-15',
-    horaInicio: '09:00',
-    horaFin: '12:00',
-    destacado: false,
-  },
-];
-
-// Formatear fecha para mostrar
-const formatearFecha = (fecha: string): string => {
-  return new Date(fecha).toLocaleDateString('es-ES', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  });
-};
-
-// Página principal de eventos
-export default function EventosPage() {
-  const [eventos, setEventos] = useState<Evento[]>(eventosIniciales);
-  const [dialogType, setDialogType] = useState<'create' | 'edit' | 'delete' | null>(null);
-  const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  // Función para abrir el diálogo
-  const openDialog = (type: 'create' | 'edit' | 'delete', evento?: Evento) => {
-    setDialogType(type);
-    setSelectedEvento(evento || null);
-    setDialogOpen(true);
-  };
-
-  // Función para guardar un evento (nuevo o editado)
-  const handleSaveEvento = (data: Evento) => {
-    if (dialogType === 'create') {
-      // Añadir nuevo evento
-      setEventos([...eventos, data]);
-      toast.success('Evento creado correctamente');
-    } else if (dialogType === 'edit') {
-      // Actualizar evento existente
-      setEventos(eventos.map(e => e.id === data.id ? data : e));
-      toast.success('Evento actualizado correctamente');
-    }
-
-    setDialogOpen(false);
-  };
-
-  // Función para eliminar un evento
-  const handleDeleteEvento = () => {
-    if (selectedEvento) {
-      setEventos(eventos.filter(e => e.id !== selectedEvento.id));
-      toast.success('Evento eliminado correctamente');
-      setDialogOpen(false);
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-8">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Eventos</h1>
+          <h2 className="text-3xl font-bold tracking-tight">Eventos</h2>
           <p className="text-muted-foreground">
-            Gestiona los eventos y actividades de la campaña.
+            Administra los eventos y actividades
           </p>
         </div>
-
-        <Button onClick={() => openDialog('create')}>
-          <Plus className="h-4 w-4 mr-2" />
-          Añadir Evento
-        </Button>
+        <Link href="/dashboard/eventos/new">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" /> Nuevo Evento
+          </Button>
+        </Link>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Todos los eventos</CardTitle>
-          <CardDescription>
-            Se muestran todos los eventos programados para la campaña.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Título</TableHead>
-                <TableHead>Ubicación</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Horario</TableHead>
-                <TableHead>Destacado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {eventos.map((evento) => (
-                <TableRow key={evento.id}>
-                  <TableCell className="font-medium">{evento.titulo}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                      {evento.ubicacion}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                      {formatearFecha(evento.fecha)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                      {evento.horaInicio} - {evento.horaFin}
-                    </div>
-                  </TableCell>
-                  <TableCell>{evento.destacado ? "Sí" : "No"}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => openDialog('edit', evento)}>
-                        <Pencil className="h-4 w-4" />
-                        <span className="sr-only">Editar</span>
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => openDialog('delete', evento)}>
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Eliminar</span>
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <DataTable
+        columns={columns}
+        data={eventos}
+      />
 
-      {/* Diálogo para crear/editar/eliminar */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[550px]">
-          <DialogHeader>
-            <DialogTitle>
-              {dialogType === 'create' && 'Crear nuevo evento'}
-              {dialogType === 'edit' && 'Editar evento'}
-              {dialogType === 'delete' && 'Eliminar evento'}
-            </DialogTitle>
-            <DialogDescription>
-              {dialogType !== 'delete'
-                ? 'Rellena los campos para gestionar el evento.'
-                : 'Esta acción no se puede deshacer.'}
-            </DialogDescription>
-          </DialogHeader>
-
-          {dialogType === 'delete' && selectedEvento ? (
-            <DeleteConfirmation
-              evento={selectedEvento}
-              onConfirm={handleDeleteEvento}
-              onCancel={() => setDialogOpen(false)}
-            />
-          ) : (
-            <EventoForm
-              evento={dialogType === 'edit' ? selectedEvento || undefined : undefined}
-              onSave={handleSaveEvento}
-              onCancel={() => setDialogOpen(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Eliminar Evento"
+        description="¿Estás seguro que deseas eliminar este evento? Esta acción no se puede deshacer."
+        onConfirm={() => selectedEvento && handleDelete(selectedEvento.id)}
+        variant="destructive"
+        confirmText="Eliminar"
+      />
     </div>
   );
 }

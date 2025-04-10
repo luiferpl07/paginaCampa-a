@@ -9,13 +9,13 @@ export default function AcercaDe() {
   return (
     <Layout>
       {/* Page Header */}
-      <div className="bg-gray-100 py-12">
+      <div className="bg-gray-200 py-12">
         <div className="container-custom">
           <h1 className="text-3xl md:text-4xl font-bold">Acerca de Hector Olimpo</h1>
           <div className="flex items-center mt-2 text-sm">
-            <Link href="/" className="text-gray-600 hover:text-primary">Inicio</Link>
-            <span className="mx-2 text-gray-400">/</span>
-            <span className="text-gray-800">Acerca de Hector Olimpo</span>
+            <Link href="/" className="text-secondary hover:text-[--red]">Inicio</Link>
+            <span className="mx-2 text-secondary">/</span>
+            <span className="text-secondary">Acerca de Hector Olimpo</span>
           </div>
         </div>
       </div>

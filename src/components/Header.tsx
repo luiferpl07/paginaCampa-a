@@ -15,39 +15,41 @@ const navegacion = [
   },
   {
     name: 'Conoceme',
-    href: '/meet-adam',
+    href: '/',
     dropdown: [
-      { name: 'Acerca de', href: '/acerca-de' },
-      { name: 'Contactos', href: '/contacto' },
-      { name: 'Mi Trayectoria', href: '/mi-trayectoria' },
+      { name: 'Acerca de', href: '/' },
+      { name: 'Contactos', href: '/' },
+      { name: 'Mi Trayectoria', href: '/' },
     ]
   },
   {
     name: 'Eventos',
-    href: '/events',
+    href: '/eventos',
     dropdown: [
-      { name: 'Events Masonry', href: '/events' },
-      { name: 'Events By Month', href: '/events/by-month' },
-      { name: 'Events List With Map', href: '/events/with-map' },
+      { name: 'Próximos Eventos', href: '/eventos' }
+     // { name: 'Próximos Eventos', href: '/proximos' },
+      //{ name: 'Eventos Pasados', href: '/pasados' },
+      //{ name: 'Calendario', href: '/calendario' },
+      //{ name: 'Galería de Eventos', href: '/galeria' },
     ]
   },
   {
-    name: 'blog',
-    href: '/media',
+    name: 'Blog',
+    href: '/blog',
     dropdown: [
-      { name: '2 Columns With Description', href: '/media/2-columns' },
-      { name: 'Grid Gallery', href: '/media/grid-gallery' },
-      { name: 'Instagram Gallery', href: '/media/instagram-gallery' },
+      { name: 'Podcasts', href: '/podcast' },
+      { name: 'Videos', href: '/videos' },
+      { name: 'Libros', href: '/libros' },
+      { name: 'Revistas', href: '/revistas' },
+      { name: 'Documentos', href: '/documentos' },
     ]
   },
   {
     name: 'Noticias',
-    href: '/features',
+    href: '/noticias',
     dropdown: [
-      { name: 'Shortcodes', href: '/features/shortcodes' },
-      { name: 'Typography', href: '/features/typography' },
-      { name: 'Columns', href: '/features/columns' },
-    ]
+      { name: 'Todas las Noticias', href: '/noticias' },
+      ]
   },
 ];
 
@@ -97,7 +99,7 @@ const Header = () => {
     <header
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
         !isHomePage || scrolled 
-          ? 'bg-[--red] py-2 shadow-md' 
+          ? 'bg-[--secondary] py-2 shadow-md' 
           : 'bg-transparent py-4'  
       }`}
     >
@@ -107,7 +109,7 @@ const Header = () => {
           <Link href="/" className="relative z-10">
             <div className="flex items-center">
               <Image
-                src="/logo.svg"
+                src="/logo1.svg"
                 alt="Logo"
                 width={150}
                 height={60}

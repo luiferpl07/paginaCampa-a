@@ -57,7 +57,7 @@ const Footer = () => {
               <div>
                 <Link href="/" className="inline-block mb-4">
                   <Image
-                    src="/logo.svg"
+                    src="/logo1.svg"
                     alt="Hector Olimpo"
                     width={180}
                     height={60}
@@ -66,11 +66,12 @@ const Footer = () => {
                 </Link>
                 <div className="text-gray-300 mb-4">
                   <p>Héctor Olimpo Espinosa</p>
-                  <p>Sincelejo, Sucre</p>
+                  <p>Direccion: Calle 32A 34 531</p>
+                  <p> Sincelejo - Sucre</p>
                 </div>
                 <div className="text-gray-300">
                   <p>Telefono: (xxx) xxx-xxxx</p>
-                  <p>Correo electronico: info@hectorolimpo.com</p>
+                  <p>Correo electronico: contacto@hectorolimpo.com</p>
                 </div>
                 <Link href="/privacy-policy" className="text-primary hover:underline text-sm mt-4 inline-block">
                   Política de privacidad
@@ -110,22 +111,22 @@ const Footer = () => {
               <div>
                 <h4 className="text-lg font-bold mb-4 uppercase">Conéctate con Hector Olimpo</h4>
                 <div className="flex space-x-2">
-                  <Link href="https://facebook.com/your-page" className="bg-secondary/50 hover:bg-blue-600/20 p-2 rounded-full" target='_bank'>
+                  <Link href="https://www.facebook.com/HectorOlimpoE" className="bg-secondary/50 hover:bg-blue-600/20 p-2 rounded-full" target='_bank'>
                     <FaFacebook className="h-5 w-5 text-blue-600" />
                   </Link>
-                  <Link href="https://x.com/your-handle" className="bg-secondary/50 hover:bg-black/20 p-2 rounded-full" target='_bank'>
+                  <Link href="https://x.com/hectorolimpo?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eserp%7Ctwgr%5Eauthor" className="bg-secondary/50 hover:bg-black/20 p-2 rounded-full" target='_bank'>
                     <FaX className="h-5 w-5 text-black" />
                   </Link>
-                  <Link href="https://instagram.com/your-profile" className="bg-secondary/50 hover:bg-pink-600/20 p-2 rounded-full" target='_bank'>
+                  <Link href="https://www.instagram.com/hectorolimpo/" className="bg-secondary/50 hover:bg-pink-600/20 p-2 rounded-full" target='_bank'>
                     <FaInstagram className="h-5 w-5 text-pink-600" />
                   </Link>
                   <Link href="https://youtube.com/your-channel" className="bg-secondary/50 hover:bg-red-600/20 p-2 rounded-full" target='_bank'>
                     <FaYoutube className="h-5 w-5 text-red-600" />
                   </Link>
-                  <Link href="https://tiktok.com/@your-account" className="bg-secondary/50 hover:bg-black/20 p-2 rounded-full" target='_bank'>
+                  <Link href="https://www.tiktok.com/@hectorolimpo" className="bg-secondary/50 hover:bg-black/20 p-2 rounded-full" target='_bank'>
                     <FaTiktok className="h-5 w-5 text-black" />
                   </Link>
-                  <Link href="https://wa.me/your-number" className="bg-secondary/50 hover:bg-green-500/20 p-2 rounded-full" target='_bank'>
+                  <Link href="https://cbl.link/2Wqji75" className="bg-secondary/50 hover:bg-green-500/20 p-2 rounded-full" target='_bank'>
                     <FaWhatsapp className="h-5 w-5 text-green-500" />
                   </Link>
               </div>
